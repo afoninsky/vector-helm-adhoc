@@ -1,0 +1,19 @@
+{{- if .Values.service.ports -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "chart.fullname" . }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    {{- range $name, $ctx := .Values.service.ports }}
+    - name: {{ $name }}
+      port: {{ required "Port not specified" .port }}
+      targetPort: {{ $name }}
+      protocol: {{ default "TCP" .protocol }}
+    {{- end }}
+  selector:
+    {{- include "chart.selectorLabels" . | nindent 4 }}
+{{- end }}

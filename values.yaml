@@ -1,0 +1,60 @@
+replicaCount: 1
+
+image:
+  repository: timberio/vector
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+serviceAccount:
+  create: true
+  automountToken: false # do not provide access to K8S API by default
+  name: "" # If not set and create is true, a name is generated using the fullname template
+
+# additional information:
+# https://resources.whitesourcesoftware.com/blog-whitesource/kubernetes-pod-security-policy
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  # runAsNonRoot: true # TODO: issue created https://github.com/timberio/vector/issues/1599
+
+service:
+  type: ClusterIP
+  ports:
+    {}
+    # http:
+    #   port: 19000
+    #   containerPort: 9000 # optional
+    #   protocol: TCP # optionsal
+
+disruptionBudget:
+  minAvailable: 1
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+# create persisten volume for storing buffers between restarts if enabled
+# otherwise buffers will be stored into memory or into directory which won't survive restart
+persistence:
+  size: 1Gi
+
+# https://github.com/timberio/vector/blob/master/config/vector.spec.toml
+# NOTE: possible to use helm template variables
+config: |
+  [sources.in]
+    type = "stdin"
+
+  [sinks.out]
+    inputs   = ["in"]
+    type     = "console"
+    encoding = "text"
